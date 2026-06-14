@@ -1,0 +1,1 @@
+﻿const http=require("http");const req=http.get("http://localhost:3000/",(res)=>{let d="";res.on("data",c=>d+=c);res.on("end",()=>{console.log("STATUS:"+res.statusCode);console.log("Has Growth OS:"+d.includes("Growth OS"));console.log("Size:"+d.length);});});req.on("error",e=>console.log("ERR:"+e.message));

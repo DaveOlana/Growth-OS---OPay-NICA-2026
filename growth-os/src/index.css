@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #F6F8FA;
+    color: #071827;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #c5d0da;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00B875;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-gray-100;
+  }
+
+  .card-md {
+    @apply bg-white rounded-2xl shadow-card-md border border-gray-100;
+  }
+
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-surface text-navy border border-gray-200 font-medium px-5 py-2.5 rounded-xl transition-all duration-200 hover:border-primary-400;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary-500 text-primary-600 hover:bg-primary-50 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-success {
+    @apply badge bg-green-50 text-green-700;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-50 text-amber-700;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-50 text-red-700;
+  }
+
+  .badge-info {
+    @apply badge bg-blue-50 text-blue-700;
+  }
+
+  .badge-neutral {
+    @apply badge bg-gray-100 text-gray-600;
+  }
+
+  .metric-card {
+    @apply card p-5 flex flex-col gap-1;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-navy;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-gray-500 font-normal;
+  }
+
+  .input-field {
+    @apply w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-navy text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-primary-50 text-primary-700;
+  }
+
+  .nav-item-inactive {
+    @apply nav-item text-gray-500 hover:bg-gray-100 hover:text-navy;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-right {
+  animation: slideInRight 0.35s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 1.5s ease-in-out infinite;
+}
+
+.animate-count-up {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Score ring */
+.score-ring {
+  transform-origin: center;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Demo mode overlay */
+.demo-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 24, 39, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+}
+
+.demo-highlight {
+  position: relative;
+  z-index: 60;
+  box-shadow: 0 0 0 4px #00B875, 0 0 40px rgba(0,184,117,0.3);
+  border-radius: 1rem;
+}
+
+/* Chat bubble */
+.chat-bubble-user {
+  @apply bg-primary-500 text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm max-w-xs ml-auto;
+}
+
+.chat-bubble-ai {
+  @apply bg-gray-100 text-navy rounded-2xl rounded-bl-sm px-4 py-3 text-sm max-w-sm;
+}
+
+/* Recharts custom */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+/* Transition for section changes */
+.section-enter {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.section-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Print styles for Credit Passport */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: white; }
+  .card { box-shadow: none; border: 1px solid #e5e7eb; }
+}

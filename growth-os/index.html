@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Growth OS — AI-powered business intelligence for Nigerian SMEs."/>
+<title>Growth OS — Business Intelligence for Nigerian SMEs</title>
+<style>
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
+:root{
+  --primary:#00B875;--primary-dark:#008f5a;--primary-light:#e6fff5;
+  --navy:#071827;--navy-med:#0d2540;
+  --surface:#F6F8FA;--card:#ffffff;
+  --amber:#F59E0B;--danger:#EF4444;--success:#10B981;--accent:#0EA5E9;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+  --gray-400:#9ca3af;--gray-500:#6b7280;--gray-700:#374151;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.10);
+  --radius:16px;--radius-sm:10px;--radius-lg:20px;
+  --font:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:var(--font);background:var(--surface);color:var(--navy);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--primary)}
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes drawLine{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+@keyframes scoreAnim{from{stroke-dashoffset:314}to{stroke-dashoffset:var(--target-offset)}}
+
+.anim-up{animation:fadeUp .4s ease-out forwards}
+.anim-in{animation:fadeIn .3s ease-out forwards}
+.spin{animation:spin .7s linear infinite}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:400px 100%;animation:shimmer 1.4s ease-in-out infinite;border-radius:8px}
+
+/* ═══════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════ */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px solid var(--gray-200)}
+.card-md{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-md);border:1px solid var(--gray-200)}
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}
+.justify-between{justify-content:space-between}.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}
+.p-4{padding:16px}.p-5{padding:20px}.p-6{padding:24px}
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-lg{font-size:18px}
+.text-xl{font-size:20px}.text-2xl{font-size:24px}.text-3xl{font-size:30px}
+.font-bold{font-weight:700}.font-semibold{font-weight:600}.font-medium{font-weight:500}
+.text-gray{color:var(--gray-500)}.text-primary{color:var(--primary)}.text-navy{color:var(--navy)}
+.text-success{color:var(--success)}.text-danger{color:var(--danger)}.text-amber{color:var(--amber)}
+.w-full{width:100%}.text-center{text-align:center}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);font-weight:600;font-size:14px;cursor:pointer;border:none;transition:all .2s;font-family:var(--font)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--primary-dark);box-shadow:var(--shadow-md)}
+.btn-dark{background:var(--navy);color:#fff}
+.btn-dark:hover{background:var(--navy-med)}
+.btn-outline{background:#fff;color:var(--gray-700);border:1px solid var(--gray-200)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.btn-lg{padding:14px 28px;font-size:16px;border-radius:var(--radius)}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.tag-green{background:var(--primary-light);color:var(--primary-dark)}
+.tag-blue{background:#dbeafe;color:#1d4ed8}
+.tag-amber{background:#fef3c7;color:#b45309}
+.tag-red{background:#fee2e2;color:#b91c1c}
+.tag-gray{background:var(--gray-100);color:var(--gray-700)}
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+#app{display:flex;min-height:100vh}
+
+/* Sidebar */
+#sidebar{width:240px;min-height:100vh;background:var(--card);border-right:1px solid var(--gray-200);box-shadow:var(--shadow-sm);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;flex-shrink:0}
+#sidebar-logo{padding:20px;border-bottom:1px solid var(--gray-100)}
+#sidebar-merchant{padding:14px;border-bottom:1px solid var(--gray-100)}
+#sidebar-nav{flex:1;padding:12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+#sidebar-footer{padding:14px;border-top:1px solid var(--gray-100)}
+
+.nav-link{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;color:var(--gray-500);white-space:nowrap}
+.nav-link:hover{background:var(--gray-100);color:var(--navy)}
+.nav-link.active{background:var(--primary-light);color:var(--primary-dark)}
+.nav-icon{width:18px;height:18px;flex-shrink:0}
+
+/* Main content */
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#topbar{display:none;position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--gray-200);z-index:30;padding:12px 16px;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm)}
+#content{flex:1;padding:24px 28px;max-width:900px;overflow-y:auto}
+#bottomnav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--gray-200);z-index:40;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.bnav-items{display:flex}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 6px;cursor:pointer;color:var(--gray-400);font-size:10px;font-weight:600;gap:4px;transition:color .15s}
+.bnav-item.active{color:var(--primary)}
+.bnav-icon{width:22px;height:22px}
+
+/* Responsive */
+@media(max-width:768px){
+  #sidebar{display:none}
+  #topbar{display:flex}
+  #content{padding:16px 14px;padding-bottom:80px}
+  #bottomnav{display:block}
+  .grid-2,.grid-4{grid-template-columns:1fr 1fr!important}
+  .grid-3{grid-template-columns:1fr!important}
+  .hide-mobile{display:none!important}
+}
+
+/* ═══════════════════════════════════════
+   MERCHANT SELECT
+═══════════════════════════════════════ */
+.merchant-select-wrap{position:relative}
+.merchant-select{width:100%;appearance:none;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:9px 36px 9px 12px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:var(--font);transition:all .2s}
+.merchant-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,184,117,.12)}
+.merchant-chevron{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-400)}
+
+/* ═══════════════════════════════════════
+   SECTION HEADER
+═══════════════════════════════════════ */
+.section-header{margin-bottom:24px}
+.section-title{font-size:22px;font-weight:700;color:var(--navy)}
+.section-sub{font-size:13px;color:var(--gray-500);margin-top:4px}
+
+/* ═══════════════════════════════════════
+   GRID HELPERS
+═══════════════════════════════════════ */
+.grid{display:grid;gap:16px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-2-1{grid-template-columns:2fr 1fr}
+
+/* ═══════════════════════════════════════
+   METRIC CARD
+═══════════════════════════════════════ */
+.metric-card{padding:20px;display:flex;flex-direction:column;gap:10px}
+.metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.metric-icon-row{display:flex;align-items:flex-start;justify-content:space-between}
+.metric-val{font-size:24px;font-weight:700;color:var(--navy);line-height:1.1}
+.metric-label{font-size:13px;color:var(--gray-500);margin-top:2px}
+.metric-delta-up{font-size:11px;font-weight:700;color:var(--success)}
+.metric-delta-dn{font-size:11px;font-weight:700;color:var(--danger)}
+
+/* ═══════════════════════════════════════
+   SCORE RING
+═══════════════════════════════════════ */
+.score-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
+.score-ring-svg{transform:rotate(-90deg)}
+.score-ring-track{fill:none;stroke:var(--gray-100);stroke-width:10}
+.score-ring-fill{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)}
+.score-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.score-num{font-size:32px;font-weight:700;color:var(--navy);line-height:1}
+.score-denom{font-size:11px;color:var(--gray-400)}
+
+/* ═══════════════════════════════════════
+   INSIGHT CARD
+═══════════════════════════════════════ */
+.insight-item{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:10px;font-size:13px;color:var(--gray-700)}
+.insight-item.success{background:#f0fdf4}
+.insight-item.warning{background:#fffbeb}
+.insight-item.tip{background:#eff6ff}
+.insight-item.info{background:var(--gray-100)}
+
+/* ═══════════════════════════════════════
+   LOADING SKELETON
+═══════════════════════════════════════ */
+.sk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.sk-box{border-radius:16px}
+
+/* ═══════════════════════════════════════
+   CHAT
+═══════════════════════════════════════ */
+.chat-box{display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);border:1px solid var(--gray-200);box-shadow:var(--shadow-sm);min-height:460px}
+.chat-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100)}
+.chat-avatar{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;max-height:300px}
+.bubble-ai{background:var(--gray-100);color:var(--navy);border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:13px;max-width:85%;line-height:1.5}
+.bubble-user{background:var(--primary);color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:13px;max-width:75%;margin-left:auto}
+.chat-input-row{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--gray-100)}
+.chat-input{flex:1;padding:9px 14px;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-50);font-size:13px;font-family:var(--font);color:var(--navy);outline:none;transition:all .2s}
+.chat-input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(0,184,117,.1)}
+.chat-send{width:38px;height:38px;background:var(--primary);border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-send:hover{background:var(--primary-dark)}
+.chat-send:active{transform:scale(.95)}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--gray-400);animation:pulse 1.2s ease-in-out infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+
+/* ═══════════════════════════════════════
+   CREDIT PASSPORT
+═══════════════════════════════════════ */
+.passport-card{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-med) 100%);border-radius:var(--radius-lg);padding:28px;color:#fff;margin-bottom:20px}
+.passport-field{background:rgba(255,255,255,.1);border-radius:10px;padding:12px}
+.passport-field-label{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.passport-field-val{font-size:18px;font-weight:700;color:#fff}
+
+/* ═══════════════════════════════════════
+   TRANSACTIONS TABLE
+═══════════════════════════════════════ */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--gray-200);box-shadow:var(--shadow-sm)}
+table{width:100%;border-collapse:collapse;background:var(--card)}
+thead tr{background:var(--gray-50);border-bottom:1px solid var(--gray-100)}
+th{text-align:left;padding:12px 14px;font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--gray-50);color:var(--navy)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--gray-50)}
+.filter-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--gray-200);background:#fff;color:var(--gray-700);font-family:var(--font);transition:all .15s}
+.filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.filter-btn:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+
+/* ═══════════════════════════════════════
+   DEMO OVERLAY
+═══════════════════════════════════════ */
+#demo-overlay{position:fixed;inset:0;background:rgba(7,24,39,.7);backdrop-filter:blur(3px);z-index:998;display:none}
+#demo-panel{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;background:#fff;border-radius:var(--radius-lg);padding:22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.28);min-width:340px;max-width:460px;display:none;animation:fadeUp .3s ease-out}
+.demo-dots{display:flex;gap:6px}
+.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--gray-200);transition:all .2s}
+.demo-dot.active{background:var(--primary);width:20px;border-radius:4px}
+.progress-bar-wrap{background:var(--gray-100);border-radius:999px;height:4px;margin-bottom:12px}
+.progress-bar{background:var(--primary);height:4px;border-radius:999px;transition:width .4s ease}
+
+/* ═══════════════════════════════════════
+   LANDING PAGE
+═══════════════════════════════════════ */
+#landing{display:none;min-height:100vh;flex-direction:column;background:linear-gradient(160deg,var(--navy) 0%,var(--navy-med) 60%,var(--navy) 100%)}
+#landing.visible{display:flex}
+#app-shell{display:none}
+#app-shell.visible{display:flex;flex:1}
+
+.landing-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 48px}
+@media(max-width:600px){.landing-nav{padding:16px 20px}}
+.hero{text-align:center;padding:60px 24px;max-width:800px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:999px;padding:6px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:24px;backdrop-filter:blur(8px)}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:pulse 1.5s ease-in-out infinite}
+.hero h1{font-size:clamp(32px,6vw,58px);font-weight:700;color:#fff;line-height:1.12;margin-bottom:16px}
+.hero h1 span{color:#00e698}
+.hero p{font-size:17px;color:rgba(255,255,255,.65);max-width:520px;margin:0 auto 32px;line-height:1.6}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:400px;margin:40px auto}
+.stat-item{text-align:center}
+.stat-val{font-size:22px;font-weight:700;color:#fff}
+.stat-lab{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
+.feature-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:900px;margin:50px auto 0;padding:0 24px}
+@media(max-width:700px){.feature-cards{grid-template-columns:1fr}}
+.feature-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:24px;backdrop-filter:blur(4px);transition:background .2s}
+.feature-card:hover{background:rgba(255,255,255,.13)}
+.feature-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.feature-card h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:8px}
+.feature-card p{font-size:13px;color:rgba(255,255,255,.55);line-height:1.55}
+.landing-footer{text-align:center;padding:20px;font-size:12px;color:rgba(255,255,255,.25)}
+
+/* ═══════════════════════════════════════
+   SCORE BREAKDOWN BAR
+═══════════════════════════════════════ */
+.score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.score-bar-label{font-size:11px;color:var(--gray-600,#4b5563);width:90px;flex-shrink:0;font-weight:500}
+.score-bar-track{flex:1;height:6px;background:var(--gray-100);border-radius:999px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:999px;transition:width .8s ease}
+.score-bar-num{font-size:11px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+
+/* ═══════════════════════════════════════
+   LOGO
+═══════════════════════════════════════ */
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#00B875,#00e698);border-radius:9px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,184,117,.35);flex-shrink:0}
+.logo-text{font-size:17px;font-weight:700;color:var(--navy);line-height:1}
+.logo-sub{font-size:9px;color:var(--primary);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.logo-light .logo-text{color:#fff}
+.logo-light .logo-sub{color:#00e698}
+
+/* SVG Charts */
+.chart-svg{width:100%;overflow:visible}
+.chart-area-path{fill:url(#areaGrad);opacity:.3}
+.chart-line{stroke:var(--primary);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.chart-dot{fill:var(--primary)}
+.chart-label{font-size:10px;fill:var(--gray-400);font-family:var(--font)}
+.chart-grid{stroke:var(--gray-100);stroke-width:1}
+.bar-fill{fill:var(--primary);rx:4;opacity:.85;transition:opacity .2s}
+.bar-fill:hover{opacity:1}
+
+/* Input search */
+.search-wrap{position:relative;display:inline-block}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400)}
+.search-input{padding:7px 12px 7px 30px;border:1px solid var(--gray-200);border-radius:9px;font-size:12px;font-family:var(--font);color:var(--navy);background:#fff;outline:none;transition:all .2s;width:190px}
+.search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,184,117,.1)}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LANDING ══════════════ -->
+<div id="landing" class="visible">
+  <nav class="landing-nav">
+    <div class="logo logo-light">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+          <circle cx="22" cy="7" r="2.5" fill="white" stroke="none"/>
+        </svg>
+      </div>
+      <div><div class="logo-text">Growth OS</div><div class="logo-sub">by OPay ecosystem</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="tag tag-green hide-mobile">🇳🇬 Built for Nigeria</span>
+      <button class="btn btn-primary" onclick="enterApp()">Open Dashboard →</button>
+    </div>
+  </nav>
+
+  <div class="hero" style="flex:1">
+    <div class="hero-badge"><span class="hero-badge-dot"></span> Powering growth for Nigerian SMEs</div>
+    <h1>Turn Payments Into<br/><span>Business Intelligence</span></h1>
+    <p>Growth OS transforms your daily transaction data into health scores, growth recommendations, and credit readiness — no accountant needed.</p>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <button class="btn btn-primary btn-lg" onclick="enterApp()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Open Demo Dashboard
+      </button>
+      <span style="font-size:12px;color:rgba(255,255,255,.35)">No login required · Demo data preloaded</span>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-val">₦0</div><div class="stat-lab">Setup Cost</div></div>
+      <div class="stat-item"><div class="stat-val">&lt;1min</div><div class="stat-lab">Time to Insights</div></div>
+      <div class="stat-item"><div class="stat-val">3</div><div class="stat-lab">Demo Merchants</div></div>
+    </div>
+  </div>
+
+  <div class="feature-cards">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#0d2f20">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+      </div>
+      <h3>Business Health Score</h3>
+      <p>Understand how healthy your business is — updated weekly from your real transactions. No spreadsheets.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#0c2440">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h3>Growth Copilot</h3>
+      <p>AI-powered recommendations tailored to your sales pattern, best days, and weak spots — in plain language.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#1e1040">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </div>
+      <h3>Credit Passport</h3>
+      <p>Instant lender-ready business profile showing your loan readiness and suggested funding range.</p>
+    </div>
+  </div>
+
+  <div class="landing-footer">Growth OS MVP · Built for OPay Hackathon 2026 · 🇳🇬 Made in Nigeria</div>
+</div>
+
+<!-- ══════════════ APP SHELL ══════════════ -->
+<div id="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div id="sidebar-logo">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+            <circle cx="22" cy="7" r="2.5" fill="white" stroke="none"/>
+          </svg>
+        </div>
+        <div><div class="logo-text">Growth OS</div><div class="logo-sub">by OPay ecosystem</div></div>
+      </div>
+    </div>
+    <div id="sidebar-merchant">
+      <div style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Merchant</div>
+      <div class="merchant-select-wrap">
+        <select class="merchant-select" id="merchantSelect" onchange="changeMerchant(this.value)">
+          <option value="mama-tolu">Mama Tolu Food Store</option>
+          <option value="bariga-pos">Bariga POS &amp; Mini Mart</option>
+          <option value="campus-prints">Campus Prints &amp; Stationery</option>
+        </select>
+        <div class="merchant-chevron">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </div>
+    <nav id="sidebar-nav">
+      <div class="nav-link active" data-section="dashboard" onclick="navigate('dashboard')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-link" data-section="health" onclick="navigate('health')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        Health Score
+      </div>
+      <div class="nav-link" data-section="copilot" onclick="navigate('copilot')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Growth Copilot
+      </div>
+      <div class="nav-link" data-section="credit" onclick="navigate('credit')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Credit Passport
+      </div>
+      <div class="nav-link" data-section="transactions" onclick="navigate('transactions')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        Transactions
+      </div>
+    </nav>
+    <div id="sidebar-footer">
+      <button class="btn btn-dark w-full" onclick="openDemo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Pitch Mode
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <!-- Mobile topbar -->
+    <div id="topbar">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><circle cx="22" cy="7" r="2.5" fill="white" stroke="none"/></svg>
+        </div>
+        <div class="logo-text" style="font-size:15px">Growth OS</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="merchant-select-wrap" style="width:160px">
+          <select class="merchant-select" id="merchantSelectMobile" onchange="changeMerchant(this.value)" style="font-size:12px;padding:7px 30px 7px 10px">
+            <option value="mama-tolu">Mama Tolu</option>
+            <option value="bariga-pos">Bariga POS</option>
+            <option value="campus-prints">Campus Prints</option>
+          </select>
+          <div class="merchant-chevron"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+        <button class="btn btn-dark" style="padding:7px 12px" onclick="openDemo()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div id="content"></div>
+
+    <!-- Bottom nav -->
+    <div id="bottomnav">
+      <div class="bnav-items">
+        <div class="bnav-item active" data-section="dashboard" onclick="navigate('dashboard')">
+          <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Home
+        </div>
+        <div class="bnav-item" data-section="health" onclick="navigate('health')">
+          <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          Score
+        </div>
+        <div class="bnav-item" data-section="copilot" onclick="navigate('copilot')">
+          <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Copilot
+        </div>
+        <div class="bnav-item" data-section="credit" onclick="navigate('credit')">
+          <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Credit
+        </div>
+        <div class="bnav-item" data-section="transactions" onclick="navigate('transactions')">
+          <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          Txns
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO OVERLAY -->
+<div id="demo-overlay" onclick="closeDemo()"></div>
+<div id="demo-panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:30px;height:30px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.06em" id="demo-subtitle">Pitch Mode · Step 1 of 3</div>
+        <div style="font-size:16px;font-weight:700;color:var(--navy)" id="demo-title">Business Health Score</div>
+      </div>
+    </div>
+    <button onclick="closeDemo()" style="background:none;border:none;cursor:pointer;color:var(--gray-400);padding:4px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <p id="demo-narration" style="font-size:13px;color:var(--gray-700);line-height:1.6;margin-bottom:18px"></p>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="demo-dots" id="demo-dots"></div>
+    <button class="btn btn-primary" onclick="demoNext()" id="demo-next-btn">Next →</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   MOCK DATA ENGINE
+═══════════════════════════════════════════════════════ */
+const REF_DATE = new Date('2026-06-13');
+
+function daysBefore(n) {
+  const d = new Date(REF_DATE);
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split('T')[0];
+}
+
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
+function generateTransactions(cfg) {
+  const txns = [];
+  const rand = seededRand(cfg.seed);
+  const channels = ['OPay POS','OPay POS','OPay POS','Transfer','Transfer','USSD','Card','Cash'];
+  let id = 1;
+  for (let ago = 34; ago >= 0; ago--) {
+    const dateStr = daysBefore(ago);
+    const dow = new Date(dateStr).getDay();
+    const dm = cfg.dayMults[dow] ?? 1;
+    const wi = Math.floor(ago / 7);
+    const wm = cfg.weekTrend[wi] ?? 1;
+    const cnt = Math.max(2, Math.round(cfg.avgDaily * dm * wm * (0.8 + rand() * 0.4)));
+    for (let t = 0; t < cnt; t++) {
+      const ci = Math.floor(rand() * cfg.customers.length);
+      const cu = cfg.customers[ci];
+      const amt = Math.round(cfg.avgAmt * dm * (0.5 + rand()) * 10) / 10;
+      const chi = Math.floor(rand() * channels.length);
+      const cati = Math.floor(rand() * cfg.categories.length);
+      const sr = rand();
+      txns.push({
+        id: `${cfg.prefix}-${String(id++).padStart(4,'0')}`,
+        merchantId: cfg.merchantId,
+        date: dateStr,
+        customerId: cu.id,
+        customerName: cu.name,
+        amount: Math.max(300, amt),
+        channel: channels[chi],
+        category: cfg.categories[cati],
+        status: sr > 0.04 ? 'Completed' : sr > 0.02 ? 'Pending' : 'Failed',
+        isRepeat: cu.isRepeat,
+      });
+    }
+  }
+  return txns;
+}
+
+const ALL_TXN = {
+  'mama-tolu': generateTransactions({
+    seed:42, merchantId:'mama-tolu', prefix:'MT', avgDaily:28, avgAmt:2200,
+    dayMults:{0:.5,1:.8,2:.75,3:.85,4:.9,5:1.4,6:1.2},
+    weekTrend:[1.0,.95,.9,.82,.78],
+    categories:['Jollof Rice','Fried Rice','Pepper Soup','Amala & Ewedu','Egusi Soup','Small Chops','Drinks','Swallow & Soup'],
+    customers:[
+      {id:'C001',name:'Adebayo Okafor',isRepeat:true},{id:'C002',name:'Chidinma Eze',isRepeat:true},
+      {id:'C003',name:'Fatima Aliyu',isRepeat:false},{id:'C004',name:'Tunde Bello',isRepeat:true},
+      {id:'C005',name:'Amaka Nwosu',isRepeat:false},{id:'C006',name:'CUST-007',isRepeat:false},
+      {id:'C007',name:'Seun Adesanya',isRepeat:true},{id:'C008',name:'Kelechi Ibe',isRepeat:false},
+      {id:'C009',name:'Yetunde Adebisi',isRepeat:true},{id:'C010',name:'CUST-012',isRepeat:false},
+      {id:'C011',name:'Emeka Obi',isRepeat:true},{id:'C012',name:'Shade Williams',isRepeat:false},
+      {id:'C013',name:'Balogun Aisha',isRepeat:true},{id:'C014',name:'Taiwo Olawale',isRepeat:true},
+    ],
+  }),
+  'bariga-pos': generateTransactions({
+    seed:77, merchantId:'bariga-pos', prefix:'BP', avgDaily:38, avgAmt:4800,
+    dayMults:{0:.8,1:1.5,2:1.2,3:1.1,4:1.0,5:.95,6:.9},
+    weekTrend:[1.0,1.05,.98,1.02,.96],
+    categories:['POS Withdrawal','Airtime & Data','Groceries','Drinks & Water','Household Items','Baby Products','Electronics','Transfer Fees'],
+    customers:[
+      {id:'C101',name:'Emmanuel Duru',isRepeat:true},{id:'C102',name:'CUST-103',isRepeat:false},
+      {id:'C103',name:'Patience Okoro',isRepeat:true},{id:'C104',name:'Chuka Nzeka',isRepeat:false},
+      {id:'C105',name:'Rasheed Lawal',isRepeat:true},{id:'C106',name:'CUST-108',isRepeat:false},
+      {id:'C107',name:'Funke Adegoke',isRepeat:true},{id:'C108',name:'Ikenna Onyeka',isRepeat:false},
+      {id:'C109',name:'Mariam Suleiman',isRepeat:true},{id:'C110',name:'Biodun Oluwafemi',isRepeat:true},
+      {id:'C111',name:'CUST-115',isRepeat:false},{id:'C112',name:'Chinyere Obi',isRepeat:true},
+      {id:'C113',name:'Akinwale Tunde',isRepeat:true},{id:'C114',name:'Zainab Musa',isRepeat:false},
+    ],
+  }),
+  'campus-prints': generateTransactions({
+    seed:123, merchantId:'campus-prints', prefix:'CP', avgDaily:13, avgAmt:3800,
+    dayMults:{0:.2,1:.9,2:1.5,3:1.3,4:1.1,5:.6,6:.2},
+    weekTrend:[1.0,1.3,.9,.75,.6],
+    categories:['Binding & Print','Photocopy','Stationery','Thesis Print','Lamination','ID Card','Bulk Print','Scanning'],
+    customers:[
+      {id:'C201',name:'Adaeze Okonkwo',isRepeat:true},{id:'C202',name:'Femi Badmus',isRepeat:false},
+      {id:'C203',name:'CUST-204',isRepeat:false},{id:'C204',name:'Damilola Afolabi',isRepeat:true},
+      {id:'C205',name:'Samuel Ojo',isRepeat:false},{id:'C206',name:'CUST-208',isRepeat:false},
+      {id:'C207',name:'Ifeoma Nwachukwu',isRepeat:true},{id:'C208',name:'Gbenga Adeniran',isRepeat:false},
+      {id:'C209',name:'Aisha Bello',isRepeat:true},{id:'C210',name:'Bukola Oladele',isRepeat:true},
+    ],
+  }),
+};
+
+const MERCHANTS = {
+  'mama-tolu':     {id:'mama-tolu', name:'Mama Tolu Food Store',       category:'Food & Groceries', location:'Lagos Island, Lagos', owner:'Toluwani Adeyemi'},
+  'bariga-pos':    {id:'bariga-pos', name:'Bariga POS & Mini Mart',    category:'POS / Retail',      location:'Bariga, Lagos',       owner:'Emmanuel Chukwu'},
+  'campus-prints': {id:'campus-prints', name:'Campus Prints & Stationery', category:'Printing / Stationery', location:'Yaba, Lagos', owner:'Ngozi Obi'},
+};
+
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DOWF= ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function fmt(n){
+  if(n>=1e6) return `₦${(n/1e6).toFixed(2)}M`;
+  if(n>=1000) return `₦${(n/1000).toFixed(1)}K`;
+  return `₦${Math.round(n).toLocaleString('en-NG')}`;
+}
+function fmtF(n){return `₦${Math.round(n).toLocaleString('en-NG')}`;}
+
+function weekSlice(txns, weeksAgo){
+  const end = daysBefore(weeksAgo * 7);
+  const start = daysBefore(weeksAgo * 7 + 6);
+  return txns.filter(t => t.date >= start && t.date <= end && t.status === 'Completed');
+}
+
+function computeMetrics(mid) {
+  const txns = ALL_TXN[mid] || [];
+  const comp = txns.filter(t => t.status === 'Completed');
+
+  const w0=weekSlice(txns,0), w1=weekSlice(txns,1), w2=weekSlice(txns,2), w3=weekSlice(txns,3), w4=weekSlice(txns,4);
+  const wRevs = [w4,w3,w2,w1,w0].map(w=>w.reduce((s,t)=>s+t.amount,0));
+  const curRev=wRevs[4], prevRev=wRevs[3];
+  const revGrowth = prevRev>0 ? ((curRev-prevRev)/prevRev)*100 : 0;
+
+  // Daily data (last 35 days)
+  const byDate={};
+  for(let i=34;i>=0;i--){const d=daysBefore(i);byDate[d]={date:d,rev:0,cnt:0};}
+  comp.forEach(t=>{if(byDate[t.date]){byDate[t.date].rev+=t.amount;byDate[t.date].cnt++;}});
+  const daily=Object.values(byDate).map(d=>{
+    const dt=new Date(d.date);
+    return{...d,label:`${DOW[dt.getDay()]} ${dt.getDate()}`};
+  });
+
+  // Weekly chart
+  const weekly=[w4,w3,w2,w1,w0].map((w,i)=>{
+    const ago=4-i;
+    const sd=new Date(REF_DATE);sd.setDate(sd.getDate()-ago*7-6);
+    return{label:`Wk ${sd.getDate()}/${sd.getMonth()+1}`, rev:w.reduce((s,t)=>s+t.amount,0), cnt:w.length};
+  });
+
+  // Best/worst day of week
+  const byDow=[0,1,2,3,4,5,6].map(d=>({dow:d,rev:comp.filter(t=>new Date(t.date).getDay()===d).reduce((s,t)=>s+t.amount,0)}));
+  const bestDow=byDow.reduce((a,b)=>a.rev>b.rev?a:b);
+  const worstDow=byDow.reduce((a,b)=>a.rev<b.rev?a:b);
+
+  const avgTxn=comp.length>0?comp.reduce((s,t)=>s+t.amount,0)/comp.length:0;
+  const prevAvgTxn=w1.length>0?w1.reduce((s,t)=>s+t.amount,0)/w1.length:0;
+  const avgTxnDelta=prevAvgTxn>0?((avgTxn-prevAvgTxn)/prevAvgTxn)*100:0;
+  const repeatTxns=comp.filter(t=>t.isRepeat).length;
+  const repeatRate=comp.length>0?(repeatTxns/comp.length)*100:0;
+
+  const meanRev=wRevs.reduce((s,r)=>s+r,0)/wRevs.length;
+  const variance=wRevs.reduce((s,r)=>s+Math.pow(r-meanRev,2),0)/wRevs.length;
+  const cv=meanRev>0?(Math.sqrt(variance)/meanRev)*100:100;
+
+  const wCnts=[w4,w3,w2,w1,w0].map(w=>w.length);
+  const meanCnt=wCnts.reduce((s,c)=>s+c,0)/wCnts.length;
+
+  // Scores
+  const sConsistency=Math.max(0,Math.min(25,25-cv*0.5));
+  const sVolume=Math.min(20,(meanCnt/20)*20);
+  const sGrowth=revGrowth>15?25:revGrowth>5?20:revGrowth>0?15:revGrowth>-5?10:revGrowth>-15?6:2;
+  const sRepeat=Math.min(20,(repeatRate/40)*20);
+  const drops=wRevs.filter((r,i)=>i>0&&r<wRevs[i-1]*.8).length;
+  const sRisk=Math.max(0,10-drops*3);
+  const totalScore=Math.round(sConsistency+sVolume+sGrowth+sRepeat+sRisk);
+  const healthScore=Math.max(10,Math.min(99,totalScore));
+
+  let healthStatus;
+  if(healthScore>=75)healthStatus='Growing';
+  else if(healthScore>=55)healthStatus='Stable';
+  else if(healthScore>=35)healthStatus='Watchlist';
+  else healthStatus='At Risk';
+
+  const monthlyRev=curRev*4.3;
+  const avgDaily=curRev/7;
+
+  let creditStatus;
+  if(healthScore>=72&&repeatRate>25&&curRev>300000)creditStatus='Strong Candidate';
+  else if(healthScore>=50)creditStatus='Eligible for Review';
+  else creditStatus='Not Ready Yet';
+
+  const loanMin=Math.round(monthlyRev*.5/1000)*1000;
+  const loanMax=Math.round(monthlyRev*1.5/1000)*1000;
+
+  // Insights
+  const insights=[];
+  if(revGrowth<-5)insights.push({type:'warning',text:`Sales dropped ${Math.abs(revGrowth).toFixed(0)}% vs last week. Check weekday traffic.`});
+  if(revGrowth>8)insights.push({type:'success',text:`Revenue up ${revGrowth.toFixed(0)}% this week — great momentum!`});
+  insights.push({type:'info',text:`${DOWF[bestDow.dow]} is your strongest sales day.`});
+  if(worstDow.dow!==0&&worstDow.dow!==6)insights.push({type:'tip',text:`${DOWF[worstDow.dow]} is your weakest day. Try a small promo.`});
+  if(repeatRate>30)insights.push({type:'success',text:`${repeatRate.toFixed(0)}% of customers are repeat buyers — strong loyalty!`});
+  if(avgTxnDelta>5)insights.push({type:'success',text:`Average transaction value is up ${avgTxnDelta.toFixed(0)}% this week.`});
+  if(avgTxnDelta<-5)insights.push({type:'warning',text:`Avg transaction size dropped ${Math.abs(avgTxnDelta).toFixed(0)}%.`});
+
+  const riskAlerts=[];
+  if(revGrowth<-10)riskAlerts.push({level:'high',text:'Sharp revenue drop detected vs last week.'});
+  if(cv>30)riskAlerts.push({level:'medium',text:'Revenue is inconsistent week-over-week.'});
+  if(repeatRate<15)riskAlerts.push({level:'medium',text:'Low repeat customer rate — consider loyalty incentives.'});
+
+  return{txns,comp,curRev,prevRev,revGrowth,totalTxns:w0.length,avgTxn,avgTxnDelta,
+    bestDow,worstDow,weekly,daily,repeatRate,healthScore,healthStatus,
+    creditStatus,loanMin,loanMax,monthlyRev,avgDaily,
+    sConsistency:Math.round(sConsistency),sVolume:Math.round(sVolume),
+    sGrowth:Math.round(sGrowth),sRepeat:Math.round(sRepeat),sRisk:Math.round(sRisk),
+    insights,riskAlerts,cv,meanCnt,wRevs};
+}
+
+/* ═══════════════════════════════════════════════════════
+   COPILOT ENGINE
+═══════════════════════════════════════════════════════ */
+function copilotResponse(key, mid, metrics, merchant){
+  const{revGrowth,bestDow,worstDow,repeatRate,avgTxn,curRev,healthScore,creditStatus,monthlyRev,loanMin,loanMax,cv}=metrics;
+  const responses={
+    'why-dropped':()=>{
+      if(revGrowth>=0)return`Your sales are actually up ${revGrowth.toFixed(1)}% this week — no drop detected! ${DOWF[bestDow.dow]} continues to be your strongest day.`;
+      const drop=Math.abs(revGrowth).toFixed(1);
+      return`Sales dropped ${drop}% vs last week. The main driver is lower traffic on ${DOWF[worstDow.dow]}s — your slowest day. ${cv>25?'Revenue has also been inconsistent week-to-week. ':''}Try a small ${DOWF[worstDow.dow]} discount or promo to recover volume.`;
+    },
+    'how-grow':()=>{
+      const tips=[];
+      if(repeatRate<30)tips.push(`convert one-time buyers to regulars (only ${repeatRate.toFixed(0)}% return now)`);
+      tips.push(`double down on ${DOWF[bestDow.dow]} when traffic peaks`);
+      if(revGrowth>0)tips.push(`maintain momentum — you're up ${revGrowth.toFixed(1)}% already`);
+      else tips.push(`aim for 10% recovery with weekend specials`);
+      return`To grow ${merchant.name}: ${tips.join(', then ')}. Monthly revenue estimate is ${fmt(monthlyRev)} — small improvements compound fast.`;
+    },
+    'loan-ready':()=>{
+      if(creditStatus==='Strong Candidate')return`Great news! With a ${healthScore}-pt health score, ${repeatRate.toFixed(0)}% repeat rate, and consistent weekly revenue of ~${fmt(curRev)}, you qualify as a Strong Candidate. Suggested range: ${fmtF(loanMin)} – ${fmtF(loanMax)}. Generate your Credit Passport to see the full lender report.`;
+      if(creditStatus==='Eligible for Review')return`You're Eligible for Review (score: ${healthScore}/100). To strengthen: increase revenue consistency, grow repeat rate above 30%, and maintain 4+ more stable weeks. Expected loan range: ${fmtF(loanMin)} – ${fmtF(loanMax)}.`;
+      return`Health score is ${healthScore}/100 — not yet at threshold. Focus on: more daily transactions, repeat customers, and reducing week-to-week swings. In 4–6 weeks of improvement, you could qualify.`;
+    },
+    'weekend-prep':()=>{
+      const isWknd=bestDow.dow===5||bestDow.dow===6;
+      if(isWknd)return`${DOWF[bestDow.dow]} is your peak day — prepare now! Stock up on top sellers by Thursday, ensure your OPay POS is charged. ${merchant.category==='Food & Groceries'?'Pre-cook popular dishes early Saturday morning.':'Have all equipment ready Friday afternoon.'} Your weekend typically accounts for 35–45% of weekly revenue.`;
+      return`Your peak is actually ${DOWF[bestDow.dow]}, not the weekend. For this weekend: clear slow-moving stock with small discounts, ensure OPay POS is working, and remind regular customers about any specials you're running.`;
+    },
+  };
+  const fn=responses[key];
+  if(fn)return fn();
+  const l=key.toLowerCase();
+  if(l.includes('revenue')||l.includes('sales')||l.includes('money'))return responses['how-grow']();
+  if(l.includes('drop')||l.includes('low')||l.includes('slow'))return responses['why-dropped']();
+  if(l.includes('loan')||l.includes('credit')||l.includes('borrow'))return responses['loan-ready']();
+  if(l.includes('weekend')||l.includes('saturday'))return responses['weekend-prep']();
+  return`I can help with your business! Try the suggested questions below, or ask about your sales trends, growth tips, loan readiness, or weekend preparation.`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════ */
+let currentMid = 'mama-tolu';
+let currentSection = 'dashboard';
+let currentMetrics = computeMetrics(currentMid);
+let chatHistory = {};
+let creditGenerated = {};
+
+function enterApp(){
+  document.getElementById('landing').classList.remove('visible');
+  document.getElementById('app-shell').classList.add('visible');
+  renderSection('dashboard');
+}
+
+function changeMerchant(mid){
+  if(mid===currentMid)return;
+  // Sync both selects
+  document.getElementById('merchantSelect').value=mid;
+  document.getElementById('merchantSelectMobile').value=mid;
+  currentMid=mid;
+  // Loading skeletons
+  const c=document.getElementById('content');
+  c.innerHTML=`<div class="sk-row"><div class="skeleton sk-box" style="height:110px"></div><div class="skeleton sk-box" style="height:110px"></div><div class="skeleton sk-box" style="height:110px"></div><div class="skeleton sk-box" style="height:110px"></div></div><div class="skeleton" style="height:220px;margin-bottom:16px"></div><div class="skeleton" style="height:160px"></div>`;
+  setTimeout(()=>{
+    currentMetrics=computeMetrics(mid);
+    renderSection(currentSection);
+  },700);
+}
+
+function navigate(section){
+  currentSection=section;
+  // Update nav links
+  document.querySelectorAll('.nav-link').forEach(el=>{
+    el.classList.toggle('active',el.dataset.section===section);
+  });
+  document.querySelectorAll('.bnav-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.section===section);
+  });
+  renderSection(section);
+}
+
+function renderSection(section){
+  const c=document.getElementById('content');
+  c.scrollTop=0;
+  switch(section){
+    case 'dashboard':    c.innerHTML=renderDashboard(); break;
+    case 'health':       c.innerHTML=renderHealth(); break;
+    case 'copilot':      c.innerHTML=renderCopilot(); break;
+    case 'credit':       c.innerHTML=renderCredit(); break;
+    case 'transactions': c.innerHTML=renderTransactions(); break;
+  }
+  // Post-render hooks
+  if(section==='health') animateScoreRing();
+  if(section==='copilot') initCopilot();
+  if(section==='transactions') initTransactions();
+  if(section==='credit' && creditGenerated[currentMid]) revealPassport();
+}
+
+/* ═══════════════════════════════════════════════════════
+   SVG MINI CHART (Area + Bar)
+═══════════════════════════════════════════════════════ */
+function renderAreaChart(data, width=560, height=170){
+  if(!data||data.length===0)return'';
+  const vals=data.map(d=>d.rev||0);
+  const maxV=Math.max(...vals)||1;
+  const minV=Math.min(...vals);
+  const pad={t:10,r:5,b:30,l:55};
+  const W=width-pad.l-pad.r, H=height-pad.t-pad.b;
+  const xS=i=>pad.l+i*(W/(data.length-1));
+  const yS=v=>pad.t+H-(((v-minV)/(maxV-minV||1))*H);
+
+  // Y axis ticks
+  const ticks=[0,.25,.5,.75,1].map(p=>minV+(maxV-minV)*p);
+  const yGrids=ticks.map(v=>`<line class="chart-grid" x1="${pad.l}" y1="${yS(v)}" x2="${pad.l+W}" y2="${yS(v)}"/>`).join('');
+  const yLabels=ticks.map(v=>`<text class="chart-label" x="${pad.l-6}" y="${yS(v)+3}" text-anchor="end">${fmt(v)}</text>`).join('');
+
+  // X axis labels (show every 3rd)
+  const xLabels=data.map((d,i)=>i%3===0?`<text class="chart-label" x="${xS(i)}" y="${height-6}" text-anchor="middle">${d.label}</text>`:'').join('');
+
+  // Line + area
+  const pts=data.map((d,i)=>`${xS(i)},${yS(d.rev||0)}`).join(' ');
+  const areaPath=`M${xS(0)},${yS(data[0].rev||0)} ${data.map((d,i)=>`L${xS(i)},${yS(d.rev||0)}`).join(' ')} L${xS(data.length-1)},${pad.t+H} L${xS(0)},${pad.t+H} Z`;
+  const linePath=`M${data.map((d,i)=>`${xS(i)},${yS(d.rev||0)}`).join(' L')}`;
+
+  return `<svg viewBox="0 0 ${width} ${height}" class="chart-svg">
+    <defs>
+      <linearGradient id="aG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#00B875" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#00B875" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${yGrids}${yLabels}${xLabels}
+    <path d="${areaPath}" fill="url(#aG)"/>
+    <path d="${linePath}" class="chart-line"/>
+    ${data.map((d,i)=>`<circle cx="${xS(i)}" cy="${yS(d.rev||0)}" r="3" class="chart-dot" opacity="${i===data.length-1?'1':'0'}"/>`).join('')}
+  </svg>`;
+}
+
+function renderBarChart(data, width=340, height=150){
+  if(!data||data.length===0)return'';
+  const vals=data.map(d=>d.rev||0);
+  const maxV=Math.max(...vals)||1;
+  const pad={t:10,r:10,b:28,l:55};
+  const W=width-pad.l-pad.r, H=height-pad.t-pad.b;
+  const bW=Math.min(40,(W/data.length)*.65);
+  const xS=i=>pad.l+i*(W/data.length)+((W/data.length)-bW)/2;
+  const yS=v=>pad.t+H-(v/maxV*H);
+
+  const ticks=[0,.5,1].map(p=>maxV*p);
+  const yG=ticks.map(v=>`<line class="chart-grid" x1="${pad.l}" y1="${pad.t+H-v/maxV*H}" x2="${pad.l+W}" y2="${pad.t+H-v/maxV*H}"/>`).join('');
+  const yL=ticks.map(v=>`<text class="chart-label" x="${pad.l-5}" y="${pad.t+H-v/maxV*H+3}" text-anchor="end">${fmt(v)}</text>`).join('');
+
+  const bars=data.map((d,i)=>{
+    const bH=Math.max(4,(d.rev/maxV)*H);
+    return`<rect x="${xS(i)}" y="${yS(d.rev)}" width="${bW}" height="${bH}" rx="4" fill="#00B875" opacity=".8"/>
+      <text class="chart-label" x="${xS(i)+bW/2}" y="${height-6}" text-anchor="middle">${d.label}</text>`;
+  }).join('');
+
+  return`<svg viewBox="0 0 ${width} ${height}" class="chart-svg">${yG}${yL}${bars}</svg>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════════════ */
+function renderDashboard(){
+  const m=currentMetrics;
+  const merchant=MERCHANTS[currentMid];
+  const insHtml=m.insights.slice(0,4).map(ins=>`
+    <div class="insight-item ${ins.type}">
+      <span>${ins.type==='success'?'✅':ins.type==='warning'?'⚠️':ins.type==='tip'?'💡':'ℹ️'}</span>
+      <span>${ins.text}</span>
+    </div>`).join('');
+
+  const riskHtml=m.riskAlerts.length>0?m.riskAlerts.map(a=>`
+    <div class="insight-item ${a.level==='high'?'warning':'info'}">
+      <span>${a.level==='high'?'🔴':a.level==='medium'?'🟡':'🔵'}</span>
+      <span>${a.text}</span>
+    </div>`).join(''):'<div style="color:var(--success);font-size:13px;font-weight:600">✓ No risk alerts this week</div>';
+
+  const recentHtml=m.comp.slice(0,5).map(t=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-50)">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">${t.customerName}</div>
+        <div style="font-size:11px;color:var(--gray-400)">${t.category} · ${t.channel}</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy)">${fmtF(t.amount)}</div>
+    </div>`).join('');
+
+  const chartData=m.daily.slice(-14);
+  const scoreColor=m.healthScore>=75?'var(--success)':m.healthScore>=55?'var(--accent)':m.healthScore>=35?'var(--amber)':'var(--danger)';
+  const scoreStatus={Growing:'📈 Growing',Stable:'📊 Stable',Watchlist:'⚠️ Watchlist','At Risk':'🔴 At Risk'}[m.healthStatus];
+  const scoreTagClass={Growing:'tag-green',Stable:'tag-blue',Watchlist:'tag-amber','At Risk':'tag-red'}[m.healthStatus];
+
+  return`
+  <div class="anim-up">
+    <div class="section-header">
+      <div class="section-title">Dashboard</div>
+      <div class="section-sub">Business overview for ${merchant.name}</div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:16px">
+      <div class="card metric-card">
+        <div class="metric-icon-row">
+          <div class="metric-icon" style="background:var(--primary-light)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          </div>
+          <span class="${m.revGrowth>=0?'metric-delta-up':'metric-delta-dn'}">${m.revGrowth>=0?'▲':'▼'} ${Math.abs(m.revGrowth).toFixed(1)}%</span>
+        </div>
+        <div class="metric-val">${fmt(m.curRev)}</div>
+        <div class="metric-label">Revenue This Week</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon-row">
+          <div class="metric-icon" style="background:#dbeafe">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+          </div>
+        </div>
+        <div class="metric-val">${m.totalTxns.toLocaleString()}</div>
+        <div class="metric-label">Transactions This Week</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon-row">
+          <div class="metric-icon" style="background:#ede9fe">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <span class="${m.avgTxnDelta>=0?'metric-delta-up':'metric-delta-dn'}">${m.avgTxnDelta>=0?'▲':'▼'} ${Math.abs(m.avgTxnDelta).toFixed(1)}%</span>
+        </div>
+        <div class="metric-val">${fmt(m.avgTxn)}</div>
+        <div class="metric-label">Avg. Transaction Value</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-icon-row">
+          <div class="metric-icon" style="background:#fef3c7">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
+        <div class="metric-val">${DOWF[m.bestDow.dow]}</div>
+        <div class="metric-label">Best Sales Day</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2-1" style="margin-bottom:16px">
+      <div class="card p-5">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div style="font-weight:700;font-size:15px;color:var(--navy)">Sales Trend</div>
+            <div style="font-size:11px;color:var(--gray-400)">Last 14 days · daily revenue</div>
+          </div>
+          <span class="${m.revGrowth>=0?'metric-delta-up':'metric-delta-dn'}">${m.revGrowth>=0?'▲':'▼'} ${Math.abs(m.revGrowth).toFixed(1)}% vs last week</span>
+        </div>
+        ${renderAreaChart(chartData)}
+      </div>
+      <div class="card p-5" style="display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="navigate('health')">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-500);margin-bottom:12px">Business Health Score</div>
+        <div style="position:relative;width:140px;height:140px">
+          <svg width="140" height="140" viewBox="0 0 140 140" class="score-ring-svg">
+            <circle class="score-ring-track" cx="70" cy="70" r="52"/>
+            <circle class="score-ring-fill" cx="70" cy="70" r="52" stroke="${scoreColor}"
+              stroke-dasharray="326.7"
+              stroke-dashoffset="${326.7-(m.healthScore/100)*326.7}"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num">${m.healthScore}</div>
+            <div class="score-denom">/ 100</div>
+          </div>
+        </div>
+        <div class="tag ${scoreTagClass}" style="margin-top:12px">${scoreStatus}</div>
+        <div style="font-size:11px;color:var(--primary);margin-top:10px">View breakdown →</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card p-5">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <div style="font-weight:700;font-size:14px;color:var(--navy)">Top Insights</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">${insHtml}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card p-5">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div style="font-weight:700;font-size:14px;color:var(--navy)">Risk Alerts</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">${riskHtml}</div>
+        </div>
+        <div class="card p-5" style="flex:1">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">Recent Transactions</div>
+            <button onclick="navigate('transactions')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer">View all</button>
+          </div>
+          ${recentHtml}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HEALTH SCORE
+═══════════════════════════════════════════════════════ */
+function renderHealth(){
+  const m=currentMetrics;
+  const merchant=MERCHANTS[currentMid];
+  const scoreColor=m.healthScore>=75?'#10B981':m.healthScore>=55?'#0EA5E9':m.healthScore>=35?'#F59E0B':'#EF4444';
+  const statusDesc={
+    Growing:`${merchant.name} is in excellent shape. Revenue is growing, transactions are consistent, and customers keep coming back.`,
+    Stable:`${merchant.name} is running steadily. Maintain your current pace and look for small opportunities to grow.`,
+    Watchlist:`${merchant.name} needs attention. Revenue swings or declining trends detected. Focus on consistency this week.`,
+    'At Risk':`${merchant.name} is showing risk signals. Act now — review pricing, foot traffic, and inventory.`
+  }[m.healthStatus];
+  const scoreTagClass={Growing:'tag-green',Stable:'tag-blue',Watchlist:'tag-amber','At Risk':'tag-red'}[m.healthStatus];
+  const scoreEmoji={Growing:'📈',Stable:'📊',Watchlist:'⚠️','At Risk':'🔴'}[m.healthStatus];
+
+  const bars=[
+    {label:'Revenue Consistency',score:m.sConsistency,max:25,color:'#10B981',
+      desc:`${m.cv.toFixed(0)}% variance across weeks. ${m.cv<15?'Very consistent!':m.cv<25?'Moderate swings.':'High week-to-week variation.'}`},
+    {label:'Transaction Volume',score:m.sVolume,max:20,color:'#0EA5E9',
+      desc:`Avg ${m.meanCnt.toFixed(0)} transactions/week. ${m.sVolume>=16?'Strong volume.':m.sVolume>=12?'Moderate.':'Aim for higher daily transactions.'}`},
+    {label:'Growth Trend',score:m.sGrowth,max:25,color:'#00B875',
+      desc:`${m.revGrowth>=0?'+':''}${m.revGrowth.toFixed(1)}% revenue change vs last week. ${m.revGrowth>5?'Growing well.':m.revGrowth>=0?'Stable.':'Revenue declining.'}`},
+    {label:'Customer Return Rate',score:m.sRepeat,max:20,color:'#8B5CF6',
+      desc:`${m.repeatRate.toFixed(0)}% repeat customer transactions. ${m.repeatRate>35?'Excellent loyalty!':m.repeatRate>20?'Good retention.':'Build more customer loyalty.'}`},
+    {label:'Risk Level',score:m.sRisk,max:10,color:'#F59E0B',
+      desc:`${m.sRisk>=8?'Low risk — stable operations.':m.sRisk>=5?'Moderate risk — some revenue drops.':'High risk — significant drops detected.'}`},
+  ];
+
+  const barsHtml=bars.map(b=>`
+    <div class="score-bar-row">
+      <div class="score-bar-label" title="${b.label}">${b.label.split(' ').slice(0,2).join(' ')}</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${(b.score/b.max)*100}%;background:${b.color}"></div></div>
+      <div class="score-bar-num" style="color:${b.color}">${b.score}/${b.max}</div>
+    </div>`).join('');
+
+  const detailHtml=bars.map(b=>`
+    <div class="card p-5">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;font-size:14px;color:var(--navy)">${b.label}</div>
+        <div style="font-size:20px;font-weight:700;color:${b.color}">${b.score}<span style="font-size:12px;color:var(--gray-400);font-weight:400">/${b.max}</span></div>
+      </div>
+      <div style="background:var(--gray-100);border-radius:999px;height:8px;margin-bottom:10px;overflow:hidden">
+        <div style="height:100%;border-radius:999px;background:${b.color};width:${(b.score/b.max)*100}%;transition:width .9s ease"></div>
+      </div>
+      <div style="font-size:13px;color:var(--gray-500)">${b.desc}</div>
+    </div>`).join('');
+
+  return`
+  <div class="anim-up">
+    <div class="section-header">
+      <div class="section-title">Business Health Score</div>
+      <div class="section-sub">Calculated weekly from your real transaction data</div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 2fr;gap:20px">
+      <div>
+        <div class="card p-6" style="display:flex;flex-direction:column;align-items:center">
+          <div style="position:relative;width:160px;height:160px">
+            <svg id="scoreRingSvg" width="160" height="160" viewBox="0 0 160 160" style="transform:rotate(-90deg)">
+              <circle cx="80" cy="80" r="60" fill="none" stroke="var(--gray-100)" stroke-width="12"/>
+              <circle id="scoreRingFill" cx="80" cy="80" r="60" fill="none" stroke="${scoreColor}" stroke-width="12"
+                stroke-dasharray="376.9" stroke-dashoffset="376.9" stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+              <div id="scoreNum" style="font-size:38px;font-weight:700;color:var(--navy);line-height:1">0</div>
+              <div style="font-size:12px;color:var(--gray-400)">/&nbsp;100</div>
+            </div>
+          </div>
+          <div class="tag ${scoreTagClass}" style="margin-top:14px;font-size:13px;padding:6px 16px">${scoreEmoji} ${m.healthStatus}</div>
+          <p style="font-size:13px;color:var(--gray-500);text-align:center;margin-top:14px;line-height:1.6">${statusDesc}</p>
+          <div style="margin-top:18px;width:100%;background:var(--gray-50);border-radius:12px;padding:14px">
+            <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Score Breakdown</div>
+            ${barsHtml}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">${detailHtml}</div>
+    </div>
+  </div>`;
+}
+
+function animateScoreRing(){
+  const m=currentMetrics;
+  const fill=document.getElementById('scoreRingFill');
+  const numEl=document.getElementById('scoreNum');
+  if(!fill||!numEl)return;
+  const total=376.9;
+  const offset=total-(m.healthScore/100)*total;
+  setTimeout(()=>{
+    fill.style.transition='stroke-dashoffset 1.3s cubic-bezier(.4,0,.2,1)';
+    fill.style.strokeDashoffset=offset;
+    // Count-up animation
+    let cur=0;
+    const step=m.healthScore/60;
+    const interval=setInterval(()=>{
+      cur=Math.min(cur+step,m.healthScore);
+      numEl.textContent=Math.round(cur);
+      if(cur>=m.healthScore)clearInterval(interval);
+    },20);
+  },150);
+}
+
+/* ═══════════════════════════════════════════════════════
+   COPILOT
+═══════════════════════════════════════════════════════ */
+if(!window._chatHistory)window._chatHistory={};
+
+function renderCopilot(){
+  const m=currentMetrics;
+  const merchant=MERCHANTS[currentMid];
+  const hist=window._chatHistory[currentMid]||[{role:'ai',text:`Hi! I'm your Growth Copilot for ${merchant.name}. I've analyzed your last 5 weeks of transactions. What would you like to know?`}];
+
+  const msgHtml=hist.map(msg=>`
+    <div style="display:flex;${msg.role==='user'?'justify-content:flex-end':'align-items:flex-start;gap:8px'}">
+      ${msg.role==='ai'?`<div style="width:28px;height:28px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>`:''}
+      <div class="${msg.role==='user'?'bubble-user':'bubble-ai'}">${msg.text}</div>
+    </div>`).join('');
+
+  const statsHtml=[
+    ['Revenue',fmt(m.curRev)],['Transactions',m.totalTxns],
+    ['Best Day',DOWF[m.bestDow.dow]],['Repeat Rate',`${m.repeatRate.toFixed(0)}%`],
+    ['Avg Transaction',fmt(m.avgTxn)],
+  ].map(([l,v])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-50)">
+      <span style="font-size:12px;color:var(--gray-500)">${l}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--navy)">${v}</span>
+    </div>`).join('');
+
+  return`
+  <div class="anim-up">
+    <div class="section-header">
+      <div class="section-title">Growth Copilot</div>
+      <div class="section-sub">AI-powered recommendations based on your real transaction data</div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr auto;gap:16px">
+      <div class="chat-box">
+        <div class="chat-header">
+          <div class="chat-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--navy)">Growth Copilot</div>
+            <div style="display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#10B981;display:inline-block"></span><span style="font-size:11px;color:var(--gray-400)">Analyzing ${merchant.name}</span></div>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">${msgHtml}</div>
+        <div class="chat-input-row">
+          <input id="chatInput" class="chat-input" placeholder="Ask anything about your business…" onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:220px">
+        <div class="card p-4">
+          <div style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Suggested Questions</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${[['why-dropped','Why did sales drop?'],['how-grow','How can I grow this week?'],['loan-ready','Am I ready for a loan?'],['weekend-prep','What to do before the weekend?']].map(([k,l])=>`
+            <button class="btn btn-outline" style="justify-content:flex-start;font-size:12px;padding:9px 12px;text-align:left" onclick="sendCopilotPrompt('${k}','${l}')">💬 ${l}</button>`).join('')}
+          </div>
+        </div>
+        <div class="card p-4">
+          <div style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">This Week's Numbers</div>
+          ${statsHtml}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function initCopilot(){
+  const box=document.getElementById('chatMessages');
+  if(box)box.scrollTop=box.scrollHeight;
+}
+
+function sendChat(){
+  const inp=document.getElementById('chatInput');
+  if(!inp)return;
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value='';
+  appendChat('user',text);
+  showTyping();
+  setTimeout(()=>{
+    removeTyping();
+    const resp=copilotResponse(text,currentMid,currentMetrics,MERCHANTS[currentMid]);
+    appendChat('ai',resp);
+  },800+Math.random()*500);
+}
+
+function sendCopilotPrompt(key,label){
+  appendChat('user',label);
+  showTyping();
+  setTimeout(()=>{
+    removeTyping();
+    const resp=copilotResponse(key,currentMid,currentMetrics,MERCHANTS[currentMid]);
+    appendChat('ai',resp);
+  },900+Math.random()*400);
+}
+
+function appendChat(role,text){
+  if(!window._chatHistory[currentMid])window._chatHistory[currentMid]=[
+    {role:'ai',text:`Hi! I'm your Growth Copilot for ${MERCHANTS[currentMid].name}. I've analyzed your last 5 weeks of transactions. What would you like to know?`}
+  ];
+  window._chatHistory[currentMid].push({role,text});
+  const box=document.getElementById('chatMessages');
+  if(!box)return;
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;${role==='user'?'justify-content:flex-end':'align-items:flex-start;gap:8px'}`;
+  div.innerHTML=`${role==='ai'?`<div style="width:28px;height:28px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>`:''}<div class="${role==='user'?'bubble-user':'bubble-ai'}">${text}</div>`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+
+function showTyping(){
+  const box=document.getElementById('chatMessages');
+  if(!box)return;
+  const div=document.createElement('div');
+  div.id='typingIndicator';
+  div.style.cssText='display:flex;align-items:flex-start;gap:8px';
+  div.innerHTML=`<div style="width:28px;height:28px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><div class="bubble-ai" style="display:flex;gap:4px;align-items:center;padding:12px 14px"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+
+function removeTyping(){
+  const el=document.getElementById('typingIndicator');
+  if(el)el.remove();
+}
+
+/* ═══════════════════════════════════════════════════════
+   CREDIT PASSPORT
+═══════════════════════════════════════════════════════ */
+function renderCredit(){
+  const m=currentMetrics;
+  const merchant=MERCHANTS[currentMid];
+  const consistencyPct=Math.max(0,Math.min(100,100-m.cv)).toFixed(0);
+
+  if(!creditGenerated[currentMid]){
+    return`
+    <div class="anim-up">
+      <div class="section-header">
+        <div class="section-title">Credit Passport</div>
+        <div class="section-sub">Lender-ready business profile generated from your transactions</div>
+      </div>
+      <div style="max-width:480px;margin:0 auto">
+        <div class="card-md p-6" style="text-align:center">
+          <div style="width:60px;height:60px;background:var(--primary-light);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div style="font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px">Generate Credit Passport</div>
+          <p style="font-size:13px;color:var(--gray-500);line-height:1.7;margin-bottom:24px">
+            We'll analyze ${m.comp.length} completed transactions from ${merchant.name} and generate a lender-ready credit profile showing your loan readiness.
+          </p>
+          <div class="grid grid-3" style="margin-bottom:28px;gap:12px">
+            ${[['Transactions',m.comp.length],['Weeks of Data',5],['Health Score',`${m.healthScore}/100`]].map(([l,v])=>`
+            <div style="background:var(--gray-50);border-radius:12px;padding:14px">
+              <div style="font-size:18px;font-weight:700;color:var(--navy)">${v}</div>
+              <div style="font-size:11px;color:var(--gray-400);margin-top:3px">${l}</div>
+            </div>`).join('')}
+          </div>
+          <button class="btn btn-primary btn-lg w-full" onclick="generatePassport()" id="genBtn" style="justify-content:center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Generate Credit Passport
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return renderPassport();
+}
+
+function renderPassport(){
+  const m=currentMetrics;
+  const merchant=MERCHANTS[currentMid];
+  const consistencyPct=Math.max(0,Math.min(100,100-m.cv)).toFixed(0);
+  const creditBadgeBg=m.creditStatus==='Strong Candidate'?'#10B981':m.creditStatus==='Eligible for Review'?'#0EA5E9':'#F59E0B';
+  const creditEmoji=m.creditStatus==='Strong Candidate'?'⭐':m.creditStatus==='Eligible for Review'?'✅':'⏳';
+
+  const strengthsList=[
+    m.repeatRate>25&&`${m.repeatRate.toFixed(0)}% repeat customer rate — strong loyalty`,
+    m.revGrowth>0&&`Revenue growing ${m.revGrowth.toFixed(1)}% week-over-week`,
+    m.healthScore>=60&&`Business health score of ${m.healthScore}/100`,
+    m.comp.length>100&&`${m.comp.length}+ completed transactions on record`,
+    parseFloat(consistencyPct)>70&&`${consistencyPct}% transaction consistency`,
+  ].filter(Boolean);
+
+  const strengthsHtml=strengthsList.length>0
+    ?strengthsList.map(s=>`<div style="display:flex;gap:8px;margin-bottom:8px;font-size:13px;color:var(--gray-700)"><span style="color:var(--success)">✓</span>${s}</div>`).join('')
+    :`<div style="font-size:13px;color:var(--gray-400)">Build 4+ weeks of consistent transactions to strengthen your profile.</div>`;
+
+  const riskHtml=m.riskAlerts.length>0
+    ?m.riskAlerts.map(a=>`<div style="display:flex;gap:8px;margin-bottom:8px;font-size:13px;color:var(--gray-700)"><span>${a.level==='high'?'🔴':a.level==='medium'?'🟡':'🔵'}</span>${a.text}</div>`).join('')
+    :`<div style="font-size:13px;font-weight:600;color:var(--success)">✓ No significant risk signals detected</div>`;
+
+  return`
+  <div class="anim-up">
+    <div class="section-header">
+      <div class="section-title">Credit Passport</div>
+      <div class="section-sub">Lender-ready business profile generated from your transactions</div>
+    </div>
+
+    <div class="passport-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px">
+        <div class="logo logo-light">
+          <div class="logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><circle cx="22" cy="7" r="2.5" fill="white" stroke="none"/></svg></div>
+          <div><div class="logo-text">Growth OS</div><div class="logo-sub">by OPay ecosystem</div></div>
+        </div>
+        <div style="background:${creditBadgeBg};color:white;border-radius:999px;padding:6px 16px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px">
+          ${creditEmoji} ${m.creditStatus}
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Credit Passport</div>
+      <div style="font-size:24px;font-weight:700;color:#fff;margin-bottom:2px">${merchant.name}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:22px">${merchant.category} · ${merchant.location}</div>
+      <div class="grid grid-4" style="gap:10px;margin-bottom:20px">
+        ${[['Monthly Revenue',fmt(m.monthlyRev)],['Health Score',`${m.healthScore}/100`],['Consistency',`${consistencyPct}%`],['Repeat Customers',`${m.repeatRate.toFixed(0)}%`]].map(([l,v])=>`
+        <div class="passport-field">
+          <div class="passport-field-label">${l}</div>
+          <div class="passport-field-val">${v}</div>
+        </div>`).join('')}
+      </div>
+      <div class="grid grid-2" style="gap:10px">
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:4px">Suggested Funding Range</div>
+          <div style="font-size:20px;font-weight:700;color:#00e698">${fmtF(m.loanMin)} – ${fmtF(m.loanMax)}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:4px">Avg. Daily Sales</div>
+          <div style="font-size:20px;font-weight:700;color:#fff">${fmt(m.avgDaily)}/day</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:14px;gap:14px">
+      <div class="card p-5">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <div style="font-weight:700;font-size:14px;color:var(--navy)">Strengths</div>
+        </div>
+        ${strengthsHtml}
+      </div>
+      <div class="card p-5">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style="font-weight:700;font-size:14px;color:var(--navy)">Risk Notes</div>
+        </div>
+        ${riskHtml}
+      </div>
+    </div>
+
+    <div class="card p-5" style="margin-bottom:16px">
+      <div style="font-weight:700;font-size:14px;color:var(--navy);margin-bottom:16px">Recommended Next Steps</div>
+      <div class="grid grid-3" style="gap:16px">
+        ${[
+          {n:'1',t:'Maintain consistency',d:'Keep daily transactions flowing for 4+ more weeks to strengthen your credit signal.'},
+          {n:'2',t:'Boost repeat customers',d:`Grow your ${m.repeatRate.toFixed(0)}% repeat rate to 35%+ with simple loyalty incentives.`},
+          {n:'3',t:'Apply for micro-credit',d:m.creditStatus==='Not Ready Yet'?'Reach a health score of 55+ before applying.':`Your profile supports ${fmtF(m.loanMin)}–${fmtF(m.loanMax)} — ready to apply!`},
+        ].map(s=>`
+        <div style="display:flex;gap:12px">
+          <div style="width:28px;height:28px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;flex-shrink:0">${s.n}</div>
+          <div>
+            <div style="font-weight:600;font-size:13px;color:var(--navy);margin-bottom:4px">${s.t}</div>
+            <div style="font-size:12px;color:var(--gray-500);line-height:1.5">${s.d}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-dark" onclick="window.print()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export / Print
+      </button>
+      <button class="btn btn-outline" onclick="regeneratePassport()">Regenerate</button>
+      <span style="font-size:12px;color:var(--gray-400)">Generated ${new Date().toLocaleDateString('en-NG',{day:'numeric',month:'long',year:'numeric'})}</span>
+    </div>
+  </div>`;
+}
+
+function generatePassport(){
+  const btn=document.getElementById('genBtn');
+  if(btn){btn.disabled=true;btn.innerHTML='<div style="width:16px;height:16px;border:2px solid white;border-top-color:transparent;border-radius:50%" class="spin"></div> Generating Passport…';}
+  setTimeout(()=>{
+    creditGenerated[currentMid]=true;
+    renderSection('credit');
+  },1200);
+}
+
+function revealPassport(){
+  renderSection('credit');
+}
+
+function regeneratePassport(){
+  creditGenerated[currentMid]=false;
+  renderSection('credit');
+}
+
+/* ═══════════════════════════════════════════════════════
+   TRANSACTIONS
+═══════════════════════════════════════════════════════ */
+let txnFilter='week';
+let txnSearch='';
+
+function renderTransactions(){
+  const m=currentMetrics;
+  const merchant=MERCHANTS[currentMid];
+  const filtersHtml=['week','last-week','high-value','repeat','all'].map((f,i)=>{
+    const labels=['This Week','Last Week','High Value','Repeat Customers','All'];
+    return`<button class="filter-btn ${txnFilter===f?'active':''}" onclick="setTxnFilter('${f}')">${labels[i]}</button>`;
+  }).join('');
+
+  return`
+  <div class="anim-up">
+    <div class="section-header">
+      <div class="section-title">Transactions</div>
+      <div class="section-sub">${m.txns.length} total transactions for ${merchant.name}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${filtersHtml}</div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="txnSearch" class="search-input" placeholder="Search name, category…" value="${txnSearch}" oninput="setTxnSearch(this.value)"/>
+      </div>
+    </div>
+    <div id="txnTableWrap">${renderTxnTable()}</div>
+  </div>`;
+}
+
+function initTransactions(){
+  // already rendered
+}
+
+function getFilteredTxns(){
+  const m=currentMetrics;
+  let result=m.txns;
+  if(txnFilter==='week'){const cutoff=daysBefore(7);result=result.filter(t=>t.date>=cutoff);}
+  else if(txnFilter==='last-week'){const s=daysBefore(14),e=daysBefore(8);result=result.filter(t=>t.date>=s&&t.date<=e);}
+  else if(txnFilter==='high-value'){const avg=m.txns.reduce((s,t)=>s+t.amount,0)/m.txns.length;result=result.filter(t=>t.amount>=avg*1.5);}
+  else if(txnFilter==='repeat'){result=result.filter(t=>t.isRepeat);}
+  if(txnSearch.trim()){const q=txnSearch.toLowerCase();result=result.filter(t=>t.customerName.toLowerCase().includes(q)||t.category.toLowerCase().includes(q)||t.channel.toLowerCase().includes(q));}
+  return result.slice().sort((a,b)=>b.date.localeCompare(a.date));
+}
+
+function renderTxnTable(){
+  const filtered=getFilteredTxns();
+  const total=filtered.filter(t=>t.status==='Completed').reduce((s,t)=>s+t.amount,0);
+  const rows=filtered.slice(0,60).map((t,i)=>{
+    const statusTag=t.status==='Completed'?`<span class="tag tag-green">✓ Done</span>`:t.status==='Pending'?`<span class="tag tag-amber">⏳ Pending</span>`:`<span class="tag tag-red">✗ Failed</span>`;
+    const dt=new Date(t.date);
+    return`<tr>
+      <td style="color:var(--gray-500)">${dt.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]}</td>
+      <td>
+        <div style="font-weight:600">${t.customerName}</div>
+        ${t.isRepeat?`<div style="font-size:10px;color:var(--primary)">↩ Repeat</div>`:''}
+      </td>
+      <td style="font-weight:700">${fmtF(t.amount)}</td>
+      <td style="color:var(--gray-500);font-size:12px">${t.channel}</td>
+      <td style="color:var(--gray-500);font-size:12px">${t.category}</td>
+      <td>${statusTag}</td>
+    </tr>`;
+  }).join('');
+
+  return`
+  <div style="display:flex;gap:16px;margin-bottom:10px;font-size:13px">
+    <span style="color:var(--gray-500)">${filtered.length} transactions</span>
+    <span style="font-weight:700;color:var(--navy)">Total: ${fmtF(total)}</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Date</th><th>Customer</th><th>Amount</th><th>Channel</th><th>Category</th><th>Status</th>
+      </tr></thead>
+      <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--gray-400)">No transactions found</td></tr>'}</tbody>
+    </table>
+    ${filtered.length>60?`<div style="text-align:center;padding:10px;font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-100)">Showing 60 of ${filtered.length} transactions</div>`:''}
+  </div>`;
+}
+
+function setTxnFilter(f){
+  txnFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===(['This Week','Last Week','High Value','Repeat Customers','All'][['week','last-week','high-value','repeat','all'].indexOf(f)])));
+  const wrap=document.getElementById('txnTableWrap');
+  if(wrap)wrap.innerHTML=renderTxnTable();
+}
+
+function setTxnSearch(v){
+  txnSearch=v;
+  const wrap=document.getElementById('txnTableWrap');
+  if(wrap)wrap.innerHTML=renderTxnTable();
+}
+
+/* ═══════════════════════════════════════════════════════
+   DEMO / PITCH MODE
+═══════════════════════════════════════════════════════ */
+const DEMO_STEPS=[
+  {section:'health',title:'Business Health Score',subtitle:'Step 1 of 3',
+   narration:'Growth OS analyzes weeks of transaction data to generate a real-time Business Health Score — telling merchants exactly how their business is performing, without needing an accountant.'},
+  {section:'copilot',title:'Growth Copilot',subtitle:'Step 2 of 3',
+   narration:'The AI-powered Growth Copilot gives merchants practical, merchant-friendly recommendations: why sales dropped, how to grow, and whether they\'re ready for a business loan — in plain English.'},
+  {section:'credit',title:'Credit Passport',subtitle:'Step 3 of 3',
+   narration:'Finally, Growth OS generates a Credit Passport — a lender-ready business profile built from transaction history, showing loan readiness and suggested funding range for Nigerian SMEs.'},
+];
+let demoStep=0;
+
+function openDemo(){
+  demoStep=0;
+  updateDemoPanel();
+  document.getElementById('demo-overlay').style.display='block';
+  document.getElementById('demo-panel').style.display='block';
+  navigate(DEMO_STEPS[0].section);
+}
+
+function closeDemo(){
+  document.getElementById('demo-overlay').style.display='none';
+  document.getElementById('demo-panel').style.display='none';
+}
+
+function updateDemoPanel(){
+  const s=DEMO_STEPS[demoStep];
+  document.getElementById('demo-subtitle').textContent=`Pitch Mode · ${s.subtitle}`;
+  document.getElementById('demo-title').textContent=s.title;
+  document.getElementById('demo-narration').textContent=s.narration;
+  document.getElementById('demo-next-btn').textContent=demoStep<DEMO_STEPS.length-1?'Next →':'Finish ✓';
+  // Dots
+  const dots=document.getElementById('demo-dots');
+  dots.innerHTML=DEMO_STEPS.map((_,i)=>`<div class="demo-dot ${i===demoStep?'active':''}"></div>`).join('');
+}
+
+function demoNext(){
+  if(demoStep<DEMO_STEPS.length-1){
+    demoStep++;
+    updateDemoPanel();
+    navigate(DEMO_STEPS[demoStep].section);
+  } else {
+    closeDemo();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+// App starts on landing page by default (already set in HTML)
+</script>
+</body>
+</html>
